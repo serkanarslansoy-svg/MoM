@@ -1,0 +1,1209 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Meeting Minutes</title>
+<meta name="description" content="Sabah toplantısını kaydeder, cihazda yazıya döker ve İtalyanca/İngilizce tutanak olarak saklar.">
+<meta name="theme-color" content="#030b15">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="MoM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700&family=Noto+Sans+Mono:wght@400;500;600&display=swap">
+<style>
+/* Martur Italy PLM look: black header with a red rule, navy side rail, panels with mono labels */
+:root{
+  --head:#05070d; --bg:#0a0f1c; --side:#0c1322; --panel:#0f1729; --panel2:#151e33; --sel:#1a2438;
+  --line:#243049; --line2:#1b253a;
+  --fg:#e8ecf5; --muted:#a3aec4; --label:#8a99b6;
+  --blue:#7fb0ff; --blue-ink:#9cc3ff; --primary:#2d6cf0;
+  --green:#5fd38a; --amber:#f2b33d; --red:#e5303a; --red-ink:#ff7b83;
+  --chip-blue:#13294a; --chip-green:#11301f; --chip-amber:#3a2a0d; --chip-red:#3a1216;
+  --hl:#5b4a12;
+  --sans:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Noto Sans Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+/* ---- shell ---- */
+.shell{min-height:100%;display:grid;grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
+header.top{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#06111d,#030b15);border-top:3px solid #e70009;border-bottom:1px solid #1d2a3d;
+  height:calc(72px + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) 22px 0 0;display:flex;align-items:center;gap:22px;overflow:hidden;position:sticky}
+.hicon{width:104px;height:100%;flex:none;background:url(img/seat-icon.jpg) left center/auto 100% no-repeat}
+.htitle{display:flex;align-items:center;gap:22px;white-space:nowrap;line-height:1}
+.htitle b{font-weight:700;font-size:27px;letter-spacing:-.01em;color:#fff}
+.htitle i{width:1px;height:34px;background:#3a4a62}
+.htitle span{font-weight:300;font-size:25px;letter-spacing:.01em;color:#acccec}
+.hdeco{flex:1;align-self:stretch;min-width:0;background:url(img/header-art.jpg) center/auto 100% no-repeat;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}
+.hlogo{height:26px;width:auto;display:block;flex:none}
+.huser{border-left:1px solid #3a4a62;padding-left:20px;display:flex;flex-direction:column;line-height:1.3;flex:none}
+.huser b{font-weight:500;font-size:16px;color:#fff}
+.huser span{font-size:14px;color:#7fa9e0}
+.iconbtn{background:none;border:1px solid var(--line);border-radius:8px;width:40px;height:40px;display:grid;place-items:center;color:var(--fg);cursor:pointer;flex:none}
+.iconbtn svg{width:19px;height:19px}
+
+aside.side{display:none}
+main{padding:20px 16px 28px;min-width:0}
+.view{display:flex;flex-direction:column;gap:16px;max-width:1080px}
+nav.tabs{position:sticky;bottom:0;z-index:10;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);background:var(--side);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs button{background:none;border:0;padding:10px 4px 12px;font:500 12.5px var(--sans);color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;border-top:2px solid transparent}
+nav.tabs button[aria-selected="true"]{color:var(--fg);border-top-color:var(--red)}
+nav.tabs svg{width:21px;height:21px}
+
+@media (max-width:719px){
+  header.top{height:calc(60px + env(safe-area-inset-top,0px));gap:12px;padding-right:12px}
+  .hdeco,.huser{display:none}
+  .hicon{width:54px;background-position:right center}
+  .htitle{flex-direction:column;align-items:flex-start;gap:4px;flex:1;min-width:0}
+  .htitle i{display:none}
+  .htitle b{font-size:18px}
+  .htitle span{font-size:10px;font-weight:400;letter-spacing:.03em;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .hlogo{height:11px}
+  .iconbtn{width:36px;height:36px}
+}
+@media (min-width:720px) and (max-width:1099px){ .huser{display:none} .htitle b{font-size:22px} .htitle span{font-size:20px} .hlogo{height:20px} }
+@media (min-width:1024px){
+  .shell{grid-template-columns:300px 1fr;grid-template-rows:auto 1fr}
+  header.top{grid-column:1/-1}
+  aside.side{display:flex;flex-direction:column;background:var(--side);border-right:1px solid var(--line2);position:sticky;top:75px;height:calc(100vh - 75px);overflow:hidden}
+  nav.tabs{display:none}
+  main{padding:24px 28px 40px}
+}
+.snav{display:flex;flex-direction:column;gap:4px;padding:14px 10px 8px}
+.snav button{display:flex;align-items:center;gap:12px;background:none;border:0;border-radius:8px;padding:11px 14px;color:var(--fg);font:400 15.5px var(--sans);cursor:pointer;text-align:left}
+.snav button svg{width:18px;height:18px;color:var(--muted)}
+.snav button[aria-selected="true"]{background:var(--sel)}
+.snav button:hover{background:var(--sel)}
+.sblock{display:flex;flex-direction:column;gap:10px;padding:10px 14px 0;min-height:0;flex:1}
+.shead{display:flex;justify-content:space-between;align-items:baseline}
+.slist{overflow:auto;display:flex;flex-direction:column;gap:2px;margin:0 -4px;padding-bottom:8px}
+.sitem{background:none;border:0;border-radius:8px;padding:9px 10px;text-align:left;cursor:pointer;color:var(--fg);font:inherit;display:flex;flex-direction:column;gap:1px}
+.sitem:hover,.sitem.on{background:var(--sel)}
+.sitem .code{font-family:var(--mono);font-size:12.5px;color:var(--blue)}
+.sitem .desc{font-size:13px;color:#cfd6e4;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.sfoot{border-top:1px solid var(--line2);padding:12px 14px;font-size:12.5px;color:var(--muted);line-height:1.6}
+
+/* ---- type ---- */
+.eyebrow,.label{font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--label)}
+.eyebrow{color:var(--blue)}
+.ph{display:flex;flex-direction:column;gap:4px}
+h2{font-weight:700;font-size:28px;line-height:1.2;margin:0;text-wrap:balance;letter-spacing:-.005em}
+.ph p{color:var(--muted);font-size:15.5px}
+p{margin:0}
+.hint{font-size:13.5px;color:var(--muted)}
+.mono{font-family:var(--mono)}
+.note{font-size:13px;color:var(--muted);border-left:2px solid var(--red);padding:2px 0 2px 10px}
+.warnbox{font-size:13.5px;border:1px solid #5a4417;background:var(--chip-amber);color:#f6d79a;border-radius:8px;padding:10px 12px}
+
+/* ---- controls ---- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--fg);font:500 15px var(--sans);cursor:pointer;text-decoration:none;text-align:center}
+.btn:hover{border-color:#34425f}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn svg{width:17px;height:17px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>.btn{flex:1 1 150px}
+textarea,input[type=search],input[type=text],select{width:100%;font:15px/1.5 var(--sans);color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:11px 14px}
+textarea{min-height:170px;resize:vertical}
+textarea.mono{font-family:var(--mono);font-size:12.5px;line-height:1.6}
+input[type=search]{padding-left:42px;background:var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a3aec4' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='6.5'/%3E%3Cpath d='m20 20-4-4'/%3E%3C/svg%3E") no-repeat 14px center/18px}
+::placeholder{color:#7d89a3}
+details{border:1px solid var(--line);border-radius:8px;padding:0 14px;background:var(--panel)}
+details[open]{padding-bottom:14px}
+details>summary{cursor:pointer;font-weight:500;font-size:14.5px;padding:11px 0}
+details>div{display:flex;flex-direction:column;gap:10px}
+ol.how{margin:0;padding-left:20px;font-size:14.5px;display:flex;flex-direction:column;gap:4px}
+.field{display:flex;flex-direction:column;gap:8px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14.5px}
+.check input{margin-top:4px;width:18px;height:18px;accent-color:var(--primary)}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.chip{display:inline-block;font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:4px;background:var(--chip-blue);color:var(--blue-ink);white-space:nowrap}
+.chip.green{background:var(--chip-green);color:var(--green)}
+.chip.amber{background:var(--chip-amber);color:var(--amber)}
+.chip.red{background:var(--chip-red);color:var(--red-ink)}
+.chip.plain{background:var(--panel2);color:var(--muted);text-transform:none;letter-spacing:0;font-family:var(--sans)}
+
+/* ---- workflow ---- */
+.mtop{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.linkbtn{background:none;border:1px solid var(--line);border-radius:8px;color:var(--fg);font:500 14px var(--sans);cursor:pointer;padding:8px 14px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.steps button{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left;font:inherit;color:var(--muted);display:flex;flex-direction:column;gap:2px;min-width:0}
+.steps button:disabled{cursor:default;opacity:.55}
+.steps .n{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--label)}
+.steps span{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.steps button.done{border-color:#1f4a33}
+.steps button.done .n{color:var(--green)}
+.steps button.cur{border-color:var(--primary);color:var(--fg);background:var(--panel2)}
+.steps button.cur .n{color:var(--blue)}
+@media (max-width:480px){.steps{gap:5px}.steps button{padding:8px}.steps span{font-size:12px}}
+
+.rec-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:6px 0 2px}
+.timer{font-family:var(--mono);font-size:52px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.1;letter-spacing:.02em}
+canvas.wave{width:100%;height:60px;display:block}
+.recrow{display:flex;align-items:center;gap:22px}
+.recbtn{width:86px;height:86px;border-radius:50%;border:3px solid var(--line);background:var(--panel2);display:grid;place-items:center;cursor:pointer}
+.recbtn i{width:44px;height:44px;border-radius:50%;background:var(--red);transition:all .2s}
+.recbtn.on i{width:30px;height:30px;border-radius:6px}
+.small-round{width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:var(--panel2);color:var(--fg);display:grid;place-items:center;cursor:pointer}
+.small-round svg{width:22px;height:22px}
+.status{font-family:var(--mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--label);display:flex;align-items:center;gap:8px;min-height:20px}
+.status.live{color:var(--red-ink)}
+.status.live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.2}}
+@media (prefers-reduced-motion:reduce){.status.live::before{animation:none}.recbtn i{transition:none}}
+.file{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line2);background:var(--panel2);border-radius:8px;font-size:13.5px;min-width:0}
+.file b{font-family:var(--mono);font-weight:500;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}
+
+.progress{display:flex;flex-direction:column;gap:6px}
+.pbar{height:6px;border-radius:3px;background:var(--line2);overflow:hidden}
+.pbar i{display:block;height:100%;width:0;background:var(--primary);transition:width .3s}
+.pmeta{display:flex;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* ---- minutes ---- */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.tile b{font-family:var(--mono);font-size:24px;font-weight:500;line-height:1;font-variant-numeric:tabular-nums}
+.tile.blue b{color:var(--blue)} .tile.green b{color:var(--green)} .tile.amber b{color:var(--amber)} .tile.red b{color:var(--red-ink)}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.bar .meta{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.seg{display:inline-grid;grid-auto-flow:column;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{background:var(--panel);border:0;padding:9px 16px;font:500 14px var(--sans);color:var(--muted);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--sel);color:var(--fg)}
+.minutes{display:flex;flex-direction:column;gap:16px;min-width:0}
+.mtable{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}
+.mtitle{padding:14px 18px;font-weight:600;font-size:15px;letter-spacing:.02em;text-transform:uppercase;border-bottom:1px solid var(--line);background:var(--panel2)}
+.mhead,.mrow{display:grid;grid-template-columns:170px 1fr;gap:16px;padding:14px 18px}
+.mhead{padding-block:10px;border-bottom:1px solid var(--line)}
+.mrow+.mrow{border-top:1px solid var(--line)}
+.mrow.newdept{border-top-color:#33405e}
+.mtopic{min-width:0}
+.mtopic .t{font-weight:600;color:var(--blue-ink);font-size:15.5px}
+.mtopic dl{margin:4px 0 0;display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:14px}
+.mtopic dt{color:var(--label)}
+.mtopic dd{margin:0;min-width:0;color:#d7dded}
+.mtopic dd.act{color:var(--fg);font-weight:600}
+.mtopic .free{font-size:14px;color:#d7dded}
+@media (max-width:640px){
+  .mhead{display:none}
+  .mrow{grid-template-columns:1fr;gap:8px;padding:14px}
+  .mrow .mdept:empty{display:none}
+}
+mark{background:var(--hl);color:inherit;border-radius:3px;padding:0 1px}
+
+/* ---- archive ---- */
+.list{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}
+.lhead,.item{display:grid;grid-template-columns:110px 150px 1fr 150px;gap:14px;align-items:center;padding:12px 18px}
+.lhead{border-bottom:1px solid var(--line)}
+.item{background:none;border:0;border-top:1px solid var(--line);width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.lhead+.item{border-top:0}
+.item:hover{background:var(--panel2)}
+.item .code{font-family:var(--mono);font-size:14px;color:var(--blue)}
+.item .day{font-size:12.5px;color:var(--muted);display:block}
+.item .snip{font-size:14px;color:#cfd6e4;min-width:0;overflow-wrap:anywhere}
+.item .meta{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right}
+@media (max-width:760px){
+  .lhead{display:none}
+  .item{grid-template-columns:1fr auto;gap:6px 12px}
+  .item .snip{grid-column:1/-1}
+  .item .meta{grid-column:1/-1;text-align:left}
+}
+.empty{text-align:center;color:var(--muted);font-size:14.5px;padding:28px 8px;display:flex;flex-direction:column;gap:12px;align-items:center}
+.start{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.start button,.start label{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;color:var(--fg);font:inherit;cursor:pointer}
+.start button:hover,.start label:hover{border-color:#34425f;background:var(--panel2)}
+.start b{font-size:17px;font-weight:600}
+.start span{font-size:13.5px;color:var(--muted)}
+.start svg{width:24px;height:24px;color:var(--red-ink);margin-bottom:4px}
+.start label svg{color:var(--blue)}
+
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--head);padding:9px 16px;border-radius:999px;font-weight:600;font-size:13.5px;z-index:20;max-width:calc(100% - 32px);text-align:center}
+@media (min-width:1024px){.toast{bottom:28px}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div class="hicon" aria-hidden="true"></div>
+    <div class="htitle"><b>FIAT 500</b><i></i><span>MEETING MINUTES</span></div>
+    <div class="hdeco" aria-hidden="true"></div>
+    <img class="hlogo" src="logo.png" alt="Martur Italy">
+    <div class="huser"><b>S. Arslansoy</b><span title="Product Development Manager">PDM</span></div>
+    <button class="iconbtn" id="openSettings" aria-label="Ayarlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </header>
+
+  <aside class="side">
+    <div class="snav" role="tablist">
+      <button role="tab" data-v="new" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Toplantı</button>
+      <button role="tab" data-v="min" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l4 4v14H6z"/><path d="M9 11h7M9 15h7M9 7h4"/></svg>Tutanak</button>
+      <button role="tab" data-v="arc" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 12h16M4 19h10"/></svg>Arşiv</button>
+      <button role="tab" data-v="set" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Ayarlar</button>
+    </div>
+    <div class="sblock">
+      <div class="shead"><span class="label">Toplantılar</span><span class="label" id="sCount"></span></div>
+      <input type="search" id="sq" placeholder="Tarih veya konu" aria-label="Toplantılarda ara">
+      <div class="slist" id="slist"></div>
+    </div>
+    <div class="sfoot" id="sfoot"></div>
+  </aside>
+
+  <main>
+    <!-- MEETING WORKFLOW -->
+    <section class="view" id="v-new">
+      <div class="ph"><span class="eyebrow" lang="it">Riunione mattutina</span><h2>Toplantı</h2><p id="newSub">Kayıt al, yazıya dök, tutanağı oluştur.</p></div>
+      <div class="start" id="noActive">
+        <button id="newMeeting"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="7"/></svg><b>Yeni toplantı</b><span>Bu cihazın mikrofonuyla kayda başlayın.</span></button>
+        <label for="importAudio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M7 8l5-5 5 5M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg><b>Ses dosyası içe aktar</b><span>Telefonda alınmış kaydı bilgisayarda açın (MP3, M4A, WAV).</span></label>
+        <input type="file" id="importAudio" accept="audio/*,video/mp4,.m4a,.mp3,.wav" hidden>
+      </div>
+
+      <div class="view" id="active" hidden>
+        <div class="mtop"><span class="chip plain mono" id="activeTitle"></span><button class="linkbtn" id="closeActive">Kapat</button></div>
+        <div class="steps" id="steps"></div>
+
+        <!-- 1 record -->
+        <div class="panel" data-step="0">
+          <div class="label">Adım 1 · Kayıt</div>
+          <div class="rec-wrap">
+            <div class="status" id="recStatus">Hazır</div>
+            <div class="timer" id="timer">00:00</div>
+            <canvas class="wave" id="wave"></canvas>
+            <div class="recrow">
+              <button class="small-round" id="pauseBtn" aria-label="Duraklat" hidden><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+              <button class="recbtn" id="recBtn" aria-label="Kaydı başlat"><i></i></button>
+            </div>
+          </div>
+          <div class="warnbox" id="recWarn" hidden></div>
+          <div class="file" id="audioFile" hidden><b id="audioName"></b><span class="chip green">Cihazda</span></div>
+          <p class="note" id="recNote">Telefonu masanın ortasına koyun. Kayıt sırasında ekran açık kalır; uygulamadan çıkmayın ve telefonu kilitlemeyin.</p>
+          <button class="btn primary" id="toStep1" disabled>Devam: Yazıya dök</button>
+        </div>
+
+        <!-- 2 transcribe -->
+        <div class="panel" data-step="1" hidden>
+          <div class="label">Adım 2 · Yazıya dökme</div>
+          <p class="hint">Ses bu cihazda yazıya dökülür, hiçbir yere gönderilmez. Bilgisayarda çok daha hızlıdır. İlk kullanımda model bir kez indirilir.</p>
+          <div class="progress" id="asrProgress" hidden>
+            <div class="pbar"><i id="asrBar"></i></div>
+            <div class="pmeta"><span id="asrStatus"></span><span id="asrEta"></span></div>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="asrRun">Bu cihazda yazıya dök</button>
+            <button class="btn" id="asrStop" hidden>Durdur</button>
+          </div>
+          <details>
+            <summary>Word ile yazıya dök (ayda 300 dk sınırı)</summary>
+            <div>
+              <ol class="how">
+                <li>Ses dosyasını paylaşın (OneDrive) veya indirin</li>
+                <li>Bilgisayarda Word Online → Dikte ▾ → <b>Yazıya dök</b> → dil <b>Italiano</b> → <b>Ses yükle</b></li>
+                <li>Metni kopyalayıp aşağıya yapıştırın</li>
+              </ol>
+              <div class="row">
+                <button class="btn" id="shareAudio">Ses dosyasını paylaş</button>
+                <button class="btn" id="downloadAudio">İndir</button>
+              </div>
+              <a class="btn" href="https://www.office.com/launch/word" target="_blank" rel="noopener">Word Online'ı aç ↗</a>
+            </div>
+          </details>
+          <label class="field"><span class="label">Transkript</span>
+            <textarea id="transcript" placeholder="Yazıya dökülen metin burada görünür. Düzeltebilir veya başka yerden yapıştırabilirsiniz."></textarea>
+          </label>
+          <p class="hint mono" id="tCount"></p>
+          <button class="btn primary" id="toStep2" disabled>Devam: Copilot</button>
+        </div>
+
+        <!-- 3 copilot -->
+        <div class="panel" data-step="2" hidden>
+          <div class="label">Adım 3 · Copilot'a gönder</div>
+          <p class="hint">Komut; şablonu, departman listesini ve transkripti içerir. Kopyalayın, Copilot Chat'e yapıştırın.</p>
+          <div class="warnbox" id="longWarn" hidden>Metin uzun. Copilot tek mesajda kesebilir. Bu durumda transkripti dosya olarak Copilot'a ekleyin ve <b>kısa komutu</b> yapıştırın.</div>
+          <textarea class="mono" id="prompt" readonly aria-label="Copilot komutu"></textarea>
+          <div class="row">
+            <button class="btn primary" id="copyPrompt">Komutu kopyala</button>
+            <a class="btn" href="https://m365.cloud.microsoft/chat" target="_blank" rel="noopener">Copilot Chat ↗</a>
+          </div>
+          <div class="row" id="longActions" hidden>
+            <button class="btn" id="shareTranscript">Transkript dosyası</button>
+            <button class="btn" id="copyShort">Kısa komutu kopyala</button>
+          </div>
+          <button class="btn" id="toStep3">Devam: Cevabı yapıştır</button>
+        </div>
+
+        <!-- 4 minutes -->
+        <div class="panel" data-step="3" hidden>
+          <div class="label">Adım 4 · Tutanağı kaydet</div>
+          <p class="hint">Copilot'un cevabını olduğu gibi yapıştırın. İtalyanca ve İngilizce bölümler otomatik ayrılır. Gerekirse burada düzeltin.</p>
+          <textarea class="mono" id="answer" aria-label="Copilot cevabı" placeholder="=== ITALIANO ===&#10;VERBALE RIUNIONE MATTUTINA – …"></textarea>
+          <button class="btn primary" id="saveMin">Tutanağı kaydet</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MINUTES -->
+    <section class="view" id="v-min" hidden>
+      <div class="ph"><span class="eyebrow" lang="it">Verbale</span><h2 id="minTitle">Tutanak</h2><p id="minSub"></p></div>
+      <div class="tiles" id="tiles" lang="it"></div>
+      <div class="bar" id="minBar">
+        <div class="seg" role="group" aria-label="Dil">
+          <button data-lang="both" aria-pressed="true">IT + EN</button>
+          <button data-lang="it" aria-pressed="false">IT</button>
+          <button data-lang="en" aria-pressed="false">EN</button>
+        </div>
+        <span class="meta" id="minMeta"></span>
+      </div>
+      <div class="minutes" id="minutes" lang="it"></div>
+      <div class="row" id="minActions">
+        <button class="btn primary" id="copyMin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>Kopyala</button>
+        <button class="btn" id="shareMin">Paylaş</button>
+        <button class="btn" id="editMin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Düzenle</button>
+        <button class="btn" id="showTranscript">Transkript</button>
+      </div>
+      <div class="panel" id="transcriptCard" hidden><div class="label">Transkript</div><p id="transcriptText" style="white-space:pre-wrap;font-size:14px;color:#cfd6e4"></p></div>
+    </section>
+
+    <!-- ARCHIVE -->
+    <section class="view" id="v-arc" hidden>
+      <div class="ph"><span class="eyebrow" lang="it">Archivio</span><h2>Arşiv</h2><p>Tüm tutanaklarda ve transkriptlerde arama.</p></div>
+      <input type="search" id="q" placeholder="Konu, parça, tedarikçi, kişi…" aria-label="Arşivde ara">
+      <div class="bar"><span class="meta" id="arcMeta"></span></div>
+      <div class="list" id="list"></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="v-set" hidden>
+      <div class="ph"><span class="eyebrow" lang="it">Impostazioni</span><h2>Ayarlar</h2><p>Bu cihazda saklanır.</p></div>
+      <div class="panel">
+        <label class="field"><span class="label">Departmanlar · tutanaktaki sıra, her satıra bir</span>
+          <textarea id="setDepts" style="min-height:190px"></textarea></label>
+        <label class="field"><span class="label">Tesis adı · komutta kullanılır</span>
+          <input type="text" id="setPlant"></label>
+      </div>
+      <div class="panel">
+        <label class="field"><span class="label">Yazıya dökme modeli</span>
+          <select id="setModel">
+            <option value="auto">Otomatik (önerilen)</option>
+            <option value="turbo">En iyi · büyük model, ~760 MB, ekran kartı gerekir</option>
+            <option value="small">Dengeli · ~250 MB</option>
+            <option value="base">Hızlı · ~80 MB, daha az doğru</option>
+          </select></label>
+        <label class="field"><span class="label">Konuşma dili</span>
+          <select id="setLang">
+            <option value="italian">İtalyanca (İngilizce kısımlar da çoğunlukla yakalanır)</option>
+            <option value="">Otomatik algıla</option>
+          </select></label>
+        <label class="check"><input type="checkbox" id="setNs"><span>Gürültü azaltma (mikrofon). Uzaktaki konuşmacıları bozabilir; sonuç kötüyse kapatın.</span></label>
+        <p class="hint" id="deviceInfo"></p>
+      </div>
+      <div class="panel">
+        <label class="field"><span class="label">Ses kayıtlarını otomatik sil</span>
+          <select id="setKeep">
+            <option value="0">Hiçbir zaman</option>
+            <option value="7">7 gün sonra</option>
+            <option value="30">30 gün sonra</option>
+          </select></label>
+        <p class="hint">Tutanak ve transkript metinleri silinmez. <span id="storageInfo"></span></p>
+      </div>
+      <div class="panel">
+        <div class="label">Yedek</div>
+        <p class="hint">Tutanak ve transkriptleri (ses hariç) bir dosyaya alır. Başka cihaza aktarmak için kullanın.</p>
+        <div class="row">
+          <button class="btn" id="exportBtn">Yedek al</button>
+          <label class="btn" for="importBackup">Yedeği yükle</label>
+          <input type="file" id="importBackup" accept="application/json,.json" hidden>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-v="new" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Toplantı</button>
+    <button role="tab" data-v="min" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l4 4v14H6z"/><path d="M9 11h7M9 15h7M9 7h4"/></svg>Tutanak</button>
+    <button role="tab" data-v="arc" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 12h16M4 19h10"/></svg>Arşiv</button>
+  </nav>
+</div>
+
+<script type="module">
+/* ---------- settings ---------- */
+const DEFAULTS = {
+  depts: ["Produzione", "Qualità", "Manutenzione", "Logistica", "Acquisti", "Pianificazione", "Ingegneria", "HSE"],
+  plant: "Martur Italy – Torino",
+  model: "auto", lang: "italian", ns: false, keepDays: 0,
+};
+const settings = (() => {
+  try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem("verbale.settings") || "{}") }; }
+  catch { return { ...DEFAULTS }; }
+})();
+function saveSettings() { try { localStorage.setItem("verbale.settings", JSON.stringify(settings)); } catch {} }
+function getPref(k) { try { return localStorage.getItem("verbale." + k); } catch { return null; } }
+function setPref(k, v) { try { v == null ? localStorage.removeItem("verbale." + k) : localStorage.setItem("verbale." + k, v); } catch {} }
+
+/* ---------- storage (IndexedDB) ---------- */
+const db = await new Promise((resolve, reject) => {
+  const r = indexedDB.open("verbale-db", 1);
+  r.onupgradeneeded = () => {
+    const d = r.result;
+    d.createObjectStore("meetings", { keyPath: "id" });
+    d.createObjectStore("audio");
+    d.createObjectStore("chunks", { keyPath: ["mid", "seq"] }).createIndex("mid", "mid");
+  };
+  r.onsuccess = () => resolve(r.result);
+  r.onerror = () => reject(r.error);
+});
+function req(store, mode, fn) {
+  return new Promise((resolve, reject) => {
+    const t = db.transaction(store, mode);
+    const r = fn(t.objectStore(store));
+    t.oncomplete = () => resolve(r && r.result);
+    t.onerror = () => reject(t.error);
+    t.onabort = () => reject(t.error);
+  });
+}
+const DB = {
+  all: () => req("meetings", "readonly", s => s.getAll()),
+  get: id => req("meetings", "readonly", s => s.get(id)),
+  put: m => req("meetings", "readwrite", s => s.put(m)),
+  del: id => req("meetings", "readwrite", s => s.delete(id)),
+  audio: id => req("audio", "readonly", s => s.get(id)),
+  putAudio: (id, blob) => req("audio", "readwrite", s => s.put(blob, id)),
+  delAudio: id => req("audio", "readwrite", s => s.delete(id)),
+  putChunk: c => req("chunks", "readwrite", s => s.put(c)),
+  chunks: mid => req("chunks", "readonly", s => s.index("mid").getAll(mid)),
+  chunkMids: () => req("chunks", "readonly", s => s.index("mid").getAllKeys()),
+  delChunks: mid => new Promise((resolve, reject) => {
+    const t = db.transaction("chunks", "readwrite");
+    const range = IDBKeyRange.bound([mid, 0], [mid, Infinity]);
+    t.objectStore("chunks").delete(range);
+    t.oncomplete = resolve; t.onerror = () => reject(t.error);
+  }),
+};
+try { navigator.storage?.persist?.(); } catch {}
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const pad = n => String(n).padStart(2, "0");
+const fmtDur = sec => { sec = Math.round(sec || 0); const h = sec / 3600 | 0, m = (sec % 3600) / 60 | 0, s = sec % 60; return h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`; };
+const isoDay = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const fmtD = iso => { const [y, m, d] = iso.split("-"); return `${d}/${m}/${y}`; };
+const DAYS = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const words = t => (t.trim().match(/\S+/g) || []).length;
+
+let tt;
+function toast(m) {
+  let el = $(".toast");
+  if (!el) { el = document.createElement("div"); el.className = "toast"; el.setAttribute("role", "status"); document.body.appendChild(el); }
+  el.textContent = m; el.hidden = false; clearTimeout(tt); tt = setTimeout(() => el.hidden = true, 2200);
+}
+async function copy(text, ta) {
+  try { await navigator.clipboard.writeText(text); toast("Kopyalandı"); }
+  catch { if (ta) { ta.focus(); ta.select(); } toast("Metin seçildi, elle kopyalayın"); }
+}
+function download(blob, name) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+}
+async function shareFile(blob, name, fallbackDownload = true) {
+  const file = new File([blob], name, { type: blob.type || "application/octet-stream" });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: name }); return; }
+    catch (e) { if (e.name === "AbortError") return; }
+  }
+  if (fallbackDownload) download(blob, name);
+}
+
+/* ---------- state ---------- */
+let meetings = [];
+let active = null;     // meeting being worked on
+let current = null;    // meeting shown on the minutes tab
+let lang = "both";
+let lastQ = "";
+
+async function loadMeetings() {
+  meetings = (await DB.all()).sort((a, b) => b.createdAt - a.createdAt);
+}
+async function save(m) { m.updatedAt = Date.now(); await DB.put(m); const i = meetings.findIndex(x => x.id === m.id); if (i < 0) meetings.unshift(m); else meetings[i] = m; renderSide(); }
+function newMeetingObj(date = new Date()) {
+  return { id: "m" + date.getTime(), date: isoDay(date), createdAt: date.getTime(), updatedAt: Date.now(),
+    durationSec: 0, hasAudio: false, audioName: "", transcript: "", minutes: "", promptCopied: false };
+}
+
+/* ---------- tabs ---------- */
+function show(v) {
+  document.querySelectorAll("[data-v]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.v === v)));
+  ["new", "min", "arc", "set"].forEach(k => $("#v-" + k).hidden = k !== v);
+  if (v === "min") renderMin();
+  if (v === "arc") renderList();
+  if (v === "set") renderSettings();
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll("[data-v]").forEach(b => b.onclick = () => show(b.dataset.v));
+$("#openSettings").onclick = () => show("set");
+
+/* ---------- workflow ---------- */
+const STEP_NAMES = ["Kayıt", "Yazıya dök", "Copilot", "Kaydet"];
+let step = 0;
+function stepDone(i) {
+  if (!active) return false;
+  return [active.hasAudio, !!active.transcript.trim(), active.promptCopied, !!active.minutes.trim()][i];
+}
+function maxReachable() {
+  if (!active) return 0;
+  if (!active.hasAudio && !active.transcript.trim()) return 0;
+  if (!active.transcript.trim()) return 1;
+  return 3;
+}
+function renderSteps() {
+  const max = maxReachable();
+  $("#steps").innerHTML = STEP_NAMES.map((n, i) =>
+    `<button class="${i === step ? "cur" : stepDone(i) ? "done" : ""}" data-i="${i}" ${i > max ? "disabled" : ""}><span class="n">${stepDone(i) && i !== step ? "✓" : "0" + (i + 1)}</span><span>${n}</span></button>`).join("");
+  $("#steps").querySelectorAll("button").forEach(b => b.onclick = () => go(+b.dataset.i));
+  document.querySelectorAll("[data-step]").forEach(c => c.hidden = +c.dataset.step !== step);
+}
+function go(i) {
+  if (rec.running && i !== 0) { toast("Önce kaydı bitirin"); return; }
+  step = i;
+  if (i === 2) buildPrompt();
+  renderSteps();
+  window.scrollTo(0, 0);
+}
+function renderActive() {
+  $("#noActive").hidden = !!active;
+  renderSide();
+  $("#active").hidden = !active;
+  if (!active) return;
+  const d = new Date(active.createdAt);
+  $("#activeTitle").textContent = `${DAYS[d.getDay()]} ${fmtD(active.date)} · ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  $("#newSub").textContent = "Kayıt al, yazıya dök, tutanağı oluştur.";
+  $("#timer").textContent = fmtDur(active.durationSec);
+  $("#audioFile").hidden = !active.hasAudio;
+  $("#audioName").textContent = active.hasAudio ? `${active.audioName} · ${fmtDur(active.durationSec)}` : "";
+  $("#toStep1").disabled = !active.hasAudio;
+  $("#recBtn").disabled = false;
+  $("#recBtn").hidden = active.hasAudio && !rec.running;
+  $("#recNote").hidden = active.hasAudio;
+  $("#recStatus").textContent = rec.running ? $("#recStatus").textContent : active.hasAudio ? "Kayıt tamamlandı" : "Hazır";
+  $("#transcript").value = active.transcript;
+  $("#answer").value = active.minutes;
+  countWords();
+  renderSteps();
+  drawWave();
+}
+async function openActive(m, atStep) {
+  active = m; setPref("active", m ? m.id : null);
+  step = atStep ?? (m ? Math.min(maxReachable(), m.minutes ? 3 : m.transcript ? 2 : m.hasAudio ? 1 : 0) : 0);
+  renderActive();
+}
+$("#newMeeting").onclick = async () => { const m = newMeetingObj(); await save(m); openActive(m, 0); };
+$("#closeActive").onclick = () => {
+  if (rec.running) { toast("Önce kaydı bitirin"); return; }
+  if (asrJob) { toast("Önce yazıya dökmeyi durdurun"); return; }
+  openActive(null);
+};
+
+/* ---------- recorder ---------- */
+const rec = { running: false, paused: false, ctx: null, stream: null, node: null, samples: 0, seq: 0, buf: [], bufLen: 0, levels: [], wake: null, flushIv: null, timerIv: null };
+const cv = $("#wave"), cx = cv.getContext("2d");
+function sizeCv() { cv.width = Math.max(1, cv.clientWidth) * devicePixelRatio; cv.height = Math.max(1, cv.clientHeight) * devicePixelRatio; }
+function drawWave() {
+  if (!cv.clientWidth) return;
+  if (cv.width !== cv.clientWidth * devicePixelRatio) sizeCv();
+  const w = cv.width, h = cv.height, n = 60, bw = w / n;
+  const css = getComputedStyle(document.documentElement);
+  cx.clearRect(0, 0, w, h);
+  cx.fillStyle = rec.running && !rec.paused ? css.getPropertyValue("--blue") : css.getPropertyValue("--line");
+  const lv = rec.levels.slice(-n);
+  for (let i = 0; i < n; i++) {
+    const v = lv[i - (n - lv.length)] ?? 0;
+    const bh = Math.max(2 * devicePixelRatio, Math.min(1, Math.sqrt(v) * 2.2) * h);
+    cx.fillRect(i * bw + bw * .2, (h - bh) / 2, bw * .6, bh);
+  }
+}
+addEventListener("resize", () => { renderSide();
+sizeCv(); drawWave(); });
+
+async function wakeLock() {
+  try { rec.wake = await navigator.wakeLock?.request("screen"); } catch { rec.wake = null; }
+}
+document.addEventListener("visibilitychange", async () => {
+  if (!rec.running) return;
+  if (document.visibilityState === "visible") {
+    await wakeLock();
+    if (rec.ctx && rec.ctx.state !== "running") { try { await rec.ctx.resume(); } catch {} }
+  } else {
+    setPref("bgWarn", "1");
+  }
+});
+
+function flushToDb() {
+  if (!rec.bufLen || !active) return Promise.resolve();
+  const all = new Int16Array(rec.bufLen);
+  let o = 0; for (const b of rec.buf) { all.set(b, o); o += b.length; }
+  rec.buf = []; rec.bufLen = 0;
+  return DB.putChunk({ mid: active.id, seq: rec.seq++, data: all.buffer });
+}
+
+async function startRecording() {
+  if (!navigator.mediaDevices?.getUserMedia) { toast("Bu tarayıcı mikrofon kaydını desteklemiyor"); return; }
+  try {
+    rec.stream = await navigator.mediaDevices.getUserMedia({ audio: {
+      channelCount: 1, echoCancellation: false, noiseSuppression: settings.ns, autoGainControl: true } });
+  } catch (e) {
+    toast(e.name === "NotAllowedError" ? "Mikrofon izni verilmedi. Tarayıcı ayarlarından izin verin." : "Mikrofon açılamadı");
+    return;
+  }
+  rec.ctx = new AudioContext();
+  await rec.ctx.audioWorklet.addModule("rec-worklet.js");
+  const src = rec.ctx.createMediaStreamSource(rec.stream);
+  rec.node = new AudioWorkletNode(rec.ctx, "pcm16k-recorder");
+  const mute = rec.ctx.createGain(); mute.gain.value = 0;
+  src.connect(rec.node); rec.node.connect(mute); mute.connect(rec.ctx.destination);
+  rec.samples = 0; rec.seq = 0; rec.buf = []; rec.bufLen = 0; rec.levels = [];
+  rec.node.port.onmessage = e => {
+    if (e.data.level != null) { rec.levels.push(e.data.level); if (rec.levels.length > 200) rec.levels.splice(0, 100); drawWave(); }
+    if (e.data.pcm) { rec.buf.push(e.data.pcm); rec.bufLen += e.data.pcm.length; rec.samples += e.data.pcm.length; }
+    if (e.data.flushed && rec.onFlushed) rec.onFlushed();
+  };
+  rec.ctx.onstatechange = () => {
+    if (rec.running && rec.ctx.state !== "running" && !rec.paused) showRecWarn("Kayıt kesildi (ekran kilitlendi veya başka uygulama mikrofonu aldı). Uygulamaya dönünce devam eder; aradaki kısım kaydedilmez.");
+    if (rec.ctx.state === "running") hideRecWarn();
+  };
+  rec.stream.getAudioTracks()[0].onended = () => { if (rec.running) showRecWarn("Mikrofon bağlantısı kesildi. Kaydı bitirip tekrar başlatın."); };
+  await rec.ctx.resume();
+  rec.running = true; rec.paused = false;
+  await wakeLock();
+  rec.flushIv = setInterval(flushToDb, 10000);
+  rec.timerIv = setInterval(() => { $("#timer").textContent = fmtDur(rec.samples / 16000); }, 250);
+  $("#recBtn").classList.add("on"); $("#recBtn").setAttribute("aria-label", "Kaydı bitir");
+  $("#pauseBtn").hidden = false;
+  $("#recStatus").textContent = "Kayıt yapılıyor"; $("#recStatus").className = "status live";
+  $("#recNote").hidden = false;
+  renderSteps();
+}
+function showRecWarn(t) { $("#recWarn").textContent = t; $("#recWarn").hidden = false; }
+function hideRecWarn() { $("#recWarn").hidden = true; }
+
+function togglePause() {
+  rec.paused = !rec.paused;
+  rec.node.port.postMessage({ paused: rec.paused });
+  $("#pauseBtn").setAttribute("aria-label", rec.paused ? "Devam et" : "Duraklat");
+  $("#pauseBtn").innerHTML = rec.paused
+    ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5v14l12-7z"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+  $("#recStatus").textContent = rec.paused ? "Duraklatıldı" : "Kayıt yapılıyor";
+  $("#recStatus").className = rec.paused ? "status" : "status live";
+  drawWave();
+}
+$("#pauseBtn").onclick = togglePause;
+
+async function stopRecording() {
+  $("#recBtn").disabled = true;
+  $("#recStatus").textContent = "Kaydediliyor…"; $("#recStatus").className = "status";
+  await new Promise(res => { rec.onFlushed = res; rec.node.port.postMessage({ flush: true }); setTimeout(res, 1500); });
+  rec.onFlushed = null;
+  clearInterval(rec.flushIv); clearInterval(rec.timerIv);
+  rec.stream.getTracks().forEach(t => t.stop());
+  try { await rec.ctx.close(); } catch {}
+  try { await rec.wake?.release(); } catch {}
+  rec.running = false; rec.paused = false;
+  await flushToDb();
+  await finalizeChunks(active);
+  $("#recBtn").classList.remove("on"); $("#recBtn").setAttribute("aria-label", "Kaydı başlat");
+  $("#pauseBtn").hidden = true; hideRecWarn();
+  renderActive();
+  toast("Kayıt kaydedildi");
+}
+$("#recBtn").onclick = () => rec.running ? stopRecording() : startRecording();
+$("#toStep1").onclick = () => go(1);
+
+function wavHeader(dataBytes, sr = 16000) {
+  const b = new ArrayBuffer(44), v = new DataView(b);
+  const str = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  str(0, "RIFF"); v.setUint32(4, 36 + dataBytes, true); str(8, "WAVE");
+  str(12, "fmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  str(36, "data"); v.setUint32(40, dataBytes, true);
+  return b;
+}
+// Join the 10-second pieces saved during recording into one WAV file.
+async function finalizeChunks(m) {
+  const chunks = (await DB.chunks(m.id)).sort((a, b) => a.seq - b.seq);
+  if (!chunks.length) return;
+  const bytes = chunks.reduce((n, c) => n + c.data.byteLength, 0);
+  const prev = m.hasAudio && m.audioName.endsWith(".wav") ? await DB.audio(m.id) : null;
+  const parts = [];
+  let total = bytes;
+  if (prev) { parts.push(prev.slice(44)); total += prev.size - 44; } // continue an earlier recording of the same meeting
+  const blob = new Blob([wavHeader(total), ...parts, ...chunks.map(c => c.data)], { type: "audio/wav" });
+  await DB.putAudio(m.id, blob);
+  await DB.delChunks(m.id);
+  const d = new Date(m.createdAt);
+  m.hasAudio = true;
+  m.audioName = `riunione_${m.date}_${pad(d.getHours())}${pad(d.getMinutes())}.wav`;
+  m.durationSec = total / 2 / 16000;
+  await save(m);
+}
+
+/* ---------- import an audio file ---------- */
+$("#importAudio").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  const when = f.lastModified ? new Date(f.lastModified) : new Date();
+  const m = newMeetingObj(when);
+  m.hasAudio = true; m.audioName = f.name;
+  try { const a = await decodeTo16k(await f.arrayBuffer()); m.durationSec = a.length / 16000; }
+  catch { toast("Bu ses dosyası okunamadı. MP3, M4A veya WAV deneyin."); return; }
+  await DB.putAudio(m.id, f);
+  await save(m);
+  openActive(m, 1);
+  toast("Ses dosyası eklendi");
+};
+
+async function decodeTo16k(buf) {
+  let ab;
+  try { ab = await new OfflineAudioContext(1, 1, 16000).decodeAudioData(buf.slice(0)); }
+  catch { ab = await new OfflineAudioContext(1, 1, 48000).decodeAudioData(buf.slice(0)); }
+  const n = ab.length, chs = ab.numberOfChannels;
+  let mono = ab.getChannelData(0);
+  if (chs > 1) { mono = new Float32Array(n); for (let c = 0; c < chs; c++) { const d = ab.getChannelData(c); for (let i = 0; i < n; i++) mono[i] += d[i] / chs; } }
+  if (ab.sampleRate === 16000) return mono;
+  const ratio = ab.sampleRate / 16000, out = new Float32Array(Math.floor(n / ratio));
+  for (let i = 0; i < out.length; i++) {
+    const s = Math.floor(i * ratio), e = Math.min(n, Math.floor((i + 1) * ratio));
+    let acc = 0; for (let k = s; k < e; k++) acc += mono[k]; out[i] = acc / Math.max(1, e - s);
+  }
+  return out;
+}
+async function audioFor(m) {
+  const blob = await DB.audio(m.id);
+  if (!blob) throw new Error("Ses kaydı bulunamadı");
+  if (blob.type === "audio/wav" && m.audioName.startsWith("riunione_")) {
+    const i16 = new Int16Array(await blob.slice(44).arrayBuffer());
+    const f = new Float32Array(i16.length);
+    for (let i = 0; i < i16.length; i++) f[i] = i16[i] / 32768;
+    return f;
+  }
+  return decodeTo16k(await blob.arrayBuffer());
+}
+
+/* ---------- share / download audio ---------- */
+$("#shareAudio").onclick = async () => { const b = await DB.audio(active.id); if (b) shareFile(b, active.audioName); else toast("Ses kaydı yok"); };
+$("#downloadAudio").onclick = async () => { const b = await DB.audio(active.id); if (b) download(b, active.audioName); else toast("Ses kaydı yok"); };
+
+/* ---------- transcription ---------- */
+let asrJob = null;
+const ta = $("#transcript");
+function countWords() {
+  const n = words(ta.value);
+  $("#tCount").textContent = n ? `${n} kelime` : "";
+  $("#toStep2").disabled = !n;
+}
+let tSave;
+ta.oninput = () => {
+  countWords();
+  if (!active) return;
+  const m = active;
+  m.transcript = ta.value;
+  clearTimeout(tSave); tSave = setTimeout(() => { save(m); if (m === active) renderSteps(); }, 600);
+};
+$("#toStep2").onclick = () => { save(active); go(2); };
+
+async function runAsr() {
+  if (asrJob) return;
+  if (ta.value.trim()) {
+    if ($("#asrRun").dataset.confirm !== "1") {
+      $("#asrRun").dataset.confirm = "1"; $("#asrRun").textContent = "Mevcut metnin üzerine yaz?";
+      setTimeout(() => { $("#asrRun").dataset.confirm = ""; $("#asrRun").textContent = "Bu cihazda yazıya dök"; }, 4000);
+      return;
+    }
+  }
+  $("#asrRun").dataset.confirm = "";
+  const m = active;
+  let audio;
+  try { audio = await audioFor(m); } catch (e) { toast(e.message); return; }
+  const worker = new Worker("asr-worker.js", { type: "module" });
+  asrJob = { worker, m, pieces: [], t0: 0, audioSec: audio.length / 16000 };
+  $("#asrRun").hidden = true; $("#asrStop").hidden = false;
+  $("#asrProgress").hidden = false; $("#asrBar").style.width = "0%";
+  $("#asrStatus").textContent = "Hazırlanıyor…"; $("#asrEta").textContent = "";
+  ta.readOnly = true; ta.value = "";
+  worker.onmessage = ({ data }) => {
+    const job = asrJob; if (!job || job.worker !== worker) return;
+    if (data.type === "status") $("#asrStatus").textContent = data.text;
+    if (data.type === "model") {
+      const p = data.total ? data.loaded / data.total : 0;
+      $("#asrBar").style.width = (p * 100).toFixed(1) + "%";
+      $("#asrStatus").textContent = `Model indiriliyor (yalnızca ilk sefer)`;
+      $("#asrEta").textContent = `${(data.loaded / 1e6).toFixed(0)} / ${(data.total / 1e6).toFixed(0)} MB`;
+    }
+    if (data.type === "start") {
+      job.t0 = performance.now(); job.total = data.total;
+      $("#asrBar").style.width = "0%";
+      $("#asrStatus").textContent = `Yazıya dökülüyor · ${fmtDur(data.seconds)} ses`;
+      $("#asrEta").textContent = "süre hesaplanıyor…";
+    }
+    if (data.type === "piece") {
+      job.pieces[data.index] = data.text;
+      const text = job.pieces.filter(Boolean).join("\n");
+      ta.value = text; ta.scrollTop = ta.scrollHeight; countWords();
+      const frac = data.endSec / job.audioSec;
+      $("#asrBar").style.width = (frac * 100).toFixed(1) + "%";
+      const el = (performance.now() - job.t0) / 1000;
+      const left = el / frac - el;
+      $("#asrStatus").textContent = `${fmtDur(data.endSec)} / ${fmtDur(job.audioSec)}`;
+      $("#asrEta").textContent = `kalan ~${left < 60 ? "1 dk" : Math.ceil(left / 60) + " dk"}`;
+      m.transcript = text; save(m);
+    }
+    if (data.type === "done") {
+      const el = (performance.now() - job.t0) / 1000;
+      endAsr(); toast("Yazıya dökme tamamlandı");
+      $("#asrStatus").textContent = `Tamamlandı · ${Math.max(1, Math.round(el / 60))} dk sürdü`;
+      $("#asrEta").textContent = ""; $("#asrBar").style.width = "100%";
+      renderSteps();
+    }
+    if (data.type === "error") {
+      endAsr();
+      $("#asrStatus").textContent = "Hata: " + data.message;
+      toast("Yazıya dökme başarısız. İnternet bağlantısını kontrol edip tekrar deneyin.");
+    }
+  };
+  worker.onerror = e => { endAsr(); $("#asrStatus").textContent = "Hata: " + (e.message || "çalışan başlatılamadı"); };
+  worker.postMessage({ type: "run", audio, preset: settings.model, language: settings.lang }, [audio.buffer]);
+}
+function endAsr() {
+  if (!asrJob) return;
+  asrJob.worker.terminate();
+  if (asrJob.m === active) { ta.readOnly = false; save(active); }
+  asrJob = null;
+  $("#asrRun").hidden = false; $("#asrStop").hidden = true;
+  countWords();
+}
+$("#asrRun").onclick = runAsr;
+$("#asrStop").onclick = () => { endAsr(); $("#asrStatus").textContent = "Durduruldu. Yazılan kısım saklandı."; $("#asrEta").textContent = ""; };
+
+/* ---------- prompt ---------- */
+const PROMPT_LIMIT = 12000;
+function promptText(withTranscript) {
+  const day = fmtD(active.date);
+  return `You are writing the minutes of the daily morning meeting at ${settings.plant} (automotive parts plant). The transcript is mostly Italian, sometimes English, recorded with a phone on a noisy shop floor, so it contains transcription errors.
+
+Departments, in this order (skip any with no topic): ${settings.depts.join(", ")}.
+
+Rules:
+- Group topics by department. One bullet per topic, short and factual.
+- Under each topic write only the lines that apply: Stato/Status, Decisione/Decision, Azione/Action (with Resp./Owner and Entro/Due when they were said).
+- Do not invent names, numbers or dates. If something is unclear, write "[da verificare]" / "[to be checked]".
+- Fix obvious transcription errors of technical terms (part names, machines, suppliers) only when the meaning is clear.
+- Add a PUNTI CRITICI / KEY ISSUES section at the end only if something is urgent.
+- Write the Italian version first, then the complete English version. Plain text, no tables, exactly this format:
+
+=== ITALIANO ===
+VERBALE RIUNIONE MATTUTINA – ${day}
+## PRODUZIONE
+- <argomento>
+  Stato: …
+  Decisione: …
+  Azione: … (Resp.: …, Entro: …)
+
+=== ENGLISH ===
+DAILY MORNING MEETING MINUTES – ${day}
+## PRODUCTION
+- <topic>
+  Status: …
+  Decision: …
+  Action: … (Owner: …, Due: …)
+` + (withTranscript ? `\nTRANSCRIPT:\n${active.transcript.trim()}` : `\nThe transcript is in the attached file.`);
+}
+function buildPrompt() {
+  const full = promptText(true);
+  $("#prompt").value = full;
+  const long = full.length > PROMPT_LIMIT;
+  $("#longWarn").hidden = !long; $("#longActions").hidden = !long;
+}
+async function markCopied() { active.promptCopied = true; await save(active); renderSteps(); }
+$("#copyPrompt").onclick = () => { copy($("#prompt").value, $("#prompt")); markCopied(); };
+$("#copyShort").onclick = () => { copy(promptText(false)); markCopied(); };
+$("#shareTranscript").onclick = () => shareFile(new Blob([active.transcript], { type: "text/plain" }), `trascrizione_${active.date}.txt`);
+$("#toStep3").onclick = () => go(3);
+
+/* ---------- save minutes ---------- */
+$("#answer").oninput = () => { const m = active; if (!m) return; m.minutes = $("#answer").value; clearTimeout(tSave); tSave = setTimeout(() => save(m), 600); };
+$("#saveMin").onclick = async () => {
+  const text = $("#answer").value.trim();
+  if (!text) { toast("Önce Copilot'un cevabını yapıştırın"); return; }
+  clearTimeout(tSave);
+  active.minutes = text; await save(active);
+  current = active; setPref("current", current.id);
+  await openActive(null);
+  toast("Tutanak kaydedildi");
+  show("min");
+};
+
+/* ---------- minutes: parse & render ---------- */
+const stripMd = s => s.replace(/\*\*(.+?)\*\*/g, "$1").replace(/__(.+?)__/g, "$1").replace(/`/g, "").trim();
+function splitLangs(text) {
+  const t = text.replace(/\r/g, "");
+  const reIt = /^[\s=#*_]*(?:ITALIANO|VERSIONE ITALIANA)[\s=#*_:]*$/im, reEn = /^[\s=#*_]*(?:ENGLISH|ENGLISH VERSION)[\s=#*_:]*$/im;
+  const mi = t.match(reIt), me = t.match(reEn);
+  if (!me) return { it: (mi ? t.slice(mi.index + mi[0].length) : t).trim(), en: "" };
+  const enStart = me.index;
+  const itPart = mi && mi.index < enStart ? t.slice(mi.index + mi[0].length, enStart) : t.slice(0, enStart);
+  return { it: itPart.trim(), en: t.slice(enStart + me[0].length).trim() };
+}
+const FIELD = /^(stato|status|decisione|decisioni|decision|decisions|azione|azioni|action|actions|note|notes|resp\.?|owner)\s*:\s*(.*)$/i;
+// Turn Copilot's answer into {title, sections:[{name, topics:[{title, fields:[[k,v]], extra:[]}]}]}
+function parseBlock(t) {
+  const out = { title: "", sections: [] };
+  let sec = null, top = null;
+  for (const raw of t.split("\n")) {
+    if (!raw.trim()) continue;
+    const indent = raw.match(/^\s*/)[0].replace(/\t/g, "  ").length;
+    const line = stripMd(raw);
+    const bulletM = raw.match(/^\s*(?:[-*•▪◦]|\d+[.)])\s+(.*)$/);
+    const content = stripMd(bulletM ? bulletM[1] : line);
+    const heading = /^\s*#{1,6}\s+/.test(raw) || (/^\s*\*\*[^*]+\*\*\s*:?\s*$/.test(raw) && !bulletM) || (!bulletM && indent === 0 && /^[A-ZÀ-Ý0-9 /&'’.–-]{3,}$/.test(line) && !FIELD.test(line));
+    if (!out.title && !sec && /VERBALE|MINUTES/i.test(line)) { out.title = line.replace(/^#+\s*/, ""); continue; }
+    if (heading) { sec = { name: line.replace(/^#+\s*/, "").replace(/:$/, ""), topics: [] }; out.sections.push(sec); top = null; continue; }
+    if (!sec) { sec = { name: "", topics: [] }; out.sections.push(sec); }
+    const f = content.match(FIELD);
+    if (f && top && (indent > 0 || bulletM && indent > 0 || !bulletM)) { top.fields.push([f[1].replace(/\.$/, ""), f[2]]); continue; }
+    if (bulletM && indent <= 1 || !top) { top = { title: content, fields: [], extra: [] }; sec.topics.push(top); continue; }
+    if (f) top.fields.push([f[1], f[2]]); else top.extra.push(content);
+  }
+  return out;
+}
+function plainText(b) {
+  const lines = [];
+  if (b.title) lines.push(b.title, "");
+  for (const s of b.sections) {
+    if (s.name) lines.push(s.name.toUpperCase());
+    for (const t of s.topics) {
+      lines.push("• " + t.title);
+      for (const [k, v] of t.fields) lines.push(`   ${k}: ${v}`);
+      for (const x of t.extra) lines.push("   " + x);
+    }
+    lines.push("");
+  }
+  return lines.join("\n").trim();
+}
+function hl(s, q) {
+  s = esc(s); if (!q) return s;
+  const re = new RegExp("(" + esc(q).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "gi");
+  return s.replace(re, "<mark>$1</mark>");
+}
+function renderBlock(b, q, en) {
+  let h = `<div class="mtable">${b.title ? `<div class="mtitle">${hl(b.title, q)}</div>` : ""}`;
+  h += `<div class="mhead"><span class="label">${en ? "Department" : "Reparto"}</span><span class="label">${en ? "Topic" : "Argomento"}</span></div>`;
+  for (const s of b.sections) {
+    const crit = /CRITIC|KEY ISSUE|URGENT/i.test(s.name);
+    s.topics.forEach((t, i) => {
+      h += `<div class="mrow${i === 0 ? " newdept" : ""}"><div class="mdept">${i === 0 && s.name ? `<span class="chip${crit ? " red" : ""}">${hl(s.name, q)}</span>` : ""}</div><div class="mtopic"><div class="t">${hl(t.title, q)}</div>`;
+      if (t.fields.length) h += `<dl>${t.fields.map(([k, v]) => `<dt>${esc(k)}</dt><dd class="${/^(azion|action)/i.test(k) ? "act" : ""}">${hl(v, q)}</dd>`).join("")}</dl>`;
+      for (const x of t.extra) h += `<div class="free">${hl(x, q)}</div>`;
+      h += `</div></div>`;
+    });
+  }
+  return h + `</div>`;
+}
+function stats(b) {
+  const crit = b.sections.filter(s => /CRITIC|KEY ISSUE|URGENT/i.test(s.name));
+  const normal = b.sections.filter(s => !crit.includes(s));
+  const topics = normal.flatMap(s => s.topics);
+  return {
+    depts: normal.length, topics: topics.length,
+    actions: topics.reduce((n, t) => n + t.fields.filter(([k]) => /^(azion|action)/i.test(k)).length, 0),
+    critical: crit.reduce((n, s) => n + s.topics.length, 0),
+  };
+}
+function blocks(m) { const p = splitLangs(m.minutes); return { it: parseBlock(p.it), en: p.en ? parseBlock(p.en) : null }; }
+function viewText(m) {
+  const b = blocks(m);
+  if (lang === "it") return plainText(b.it);
+  if (lang === "en") return plainText(b.en || b.it);
+  return [plainText(b.it), b.en ? plainText(b.en) : ""].filter(Boolean).join("\n\n————————————\n\n");
+}
+function renderMin() {
+  const has = current && current.minutes;
+  ["#minActions", "#minBar", "#tiles"].forEach(s => $(s).hidden = !has);
+  $("#transcriptCard").hidden = true;
+  if (!has) {
+    $("#minTitle").textContent = "Tutanak";
+    $("#minSub").textContent = "";
+    $("#minutes").innerHTML = `<div class="empty"><p>Henüz kaydedilmiş tutanak yok. Bir toplantıyı tamamlayın veya arşivden birini açın.</p></div>`;
+    return;
+  }
+  const d = new Date(current.createdAt);
+  $("#minTitle").textContent = `${DAYS[d.getDay()]} ${fmtD(current.date)}`;
+  $("#minSub").textContent = `Sabah toplantısı tutanağı · ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const b = blocks(current), st = stats(b.it);
+  $("#tiles").innerHTML = [
+    ["Reparto", st.depts, "blue"], ["Argomenti", st.topics, ""], ["Azioni", st.actions, "green"],
+    ["Punti critici", st.critical, st.critical ? "red" : ""], ["Durata", current.durationSec ? fmtDur(current.durationSec) : "—", "amber"],
+  ].map(([k, v, c]) => `<div class="tile ${c}"><span class="label">${k}</span><b>${v}</b></div>`).join("");
+  $("#minMeta").textContent = `${words(current.transcript || "")} kelime transkript${b.en ? " · IT + EN" : " · yalnız IT"}`;
+  $("#minutes").innerHTML = (lang !== "en" || !b.en ? renderBlock(b.it, lastQ, false) : "") + (lang !== "it" && b.en ? renderBlock(b.en, lastQ, true) : "");
+}
+document.querySelectorAll(".seg button").forEach(b => b.onclick = () => {
+  lang = b.dataset.lang;
+  document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  renderMin();
+});
+$("#copyMin").onclick = () => copy(viewText(current));
+$("#shareMin").onclick = async () => {
+  const text = viewText(current);
+  if (navigator.share) { try { await navigator.share({ title: `Verbale ${fmtD(current.date)}`, text }); return; } catch (e) { if (e.name === "AbortError") return; } }
+  copy(text);
+};
+$("#editMin").onclick = () => { openActive(current, 3); show("new"); };
+$("#showTranscript").onclick = () => {
+  const c = $("#transcriptCard");
+  c.hidden = !c.hidden;
+  $("#transcriptText").innerHTML = current.transcript ? hl(current.transcript, lastQ) : "Transkript yok.";
+};
+
+/* ---------- archive ---------- */
+function summary(m) {
+  if (!m.minutes) return { snip: m.transcript ? m.transcript.slice(0, 120) + "…" : "Kayıt", meta: m.durationSec ? fmtDur(m.durationSec) : "" };
+  const b = blocks(m).it, st = stats(b);
+  return { snip: b.sections.flatMap(s => s.topics.map(t => t.title)).slice(0, 3).join(" · "), meta: `${fmtDur(m.durationSec)} · ${st.topics} konu · ${st.actions} aksiyon` };
+}
+function openMeeting(m) {
+  if (m.minutes) { current = m; setPref("current", m.id); show("min"); }
+  else { if (rec.running || asrJob) { toast("Önce mevcut işlemi bitirin"); return; } openActive(m); show("new"); }
+}
+function renderList() {
+  const q = $("#q").value.trim(); lastQ = q; const ql = q.toLowerCase();
+  const res = meetings.filter(m => !ql || (m.minutes + "\n" + m.transcript).toLowerCase().includes(ql));
+  $("#arcMeta").textContent = ql ? `${res.length} / ${meetings.length} toplantı` : `${meetings.length} toplantı`;
+  if (!meetings.length) { $("#list").innerHTML = `<div class="empty"><p>Arşiv boş. Kaydedilen her toplantı burada listelenir.</p></div>`; return; }
+  if (!res.length) { $("#list").innerHTML = `<div class="empty"><p>“${esc(q)}” için sonuç yok.</p></div>`; return; }
+  $("#list").innerHTML = `<div class="lhead"><span class="label">Tarih</span><span class="label">Durum</span><span class="label">Konular</span><span class="label" style="text-align:right">Ayrıntı</span></div>` + res.map(m => {
+    const d = new Date(m.createdAt), sm = summary(m);
+    let snip = esc(sm.snip);
+    if (ql) {
+      const line = (m.minutes + "\n" + m.transcript).split("\n").find(l => l.toLowerCase().includes(ql)) || "";
+      const i = line.toLowerCase().indexOf(ql);
+      snip = hl(stripMd(line.slice(Math.max(0, i - 50), i + q.length + 70).replace(/^\s*[-*•]\s*/, "")), q);
+    }
+    const chip = m.minutes ? '<span class="chip green" lang="it">Verbale</span>' : m.transcript ? '<span class="chip" lang="it">Trascritto</span>' : '<span class="chip amber" lang="it">Bozza</span>';
+    return `<button class="item" data-id="${m.id}"><span><span class="code">${fmtD(m.date)}</span><span class="day">${DAYS[d.getDay()]} · ${pad(d.getHours())}:${pad(d.getMinutes())}</span></span><span>${chip}</span><span class="snip">${snip}</span><span class="meta">${sm.meta}</span></button>`;
+  }).join("");
+  $("#list").querySelectorAll(".item").forEach(b => b.onclick = () => openMeeting(meetings.find(x => x.id === b.dataset.id)));
+}
+function renderSide() {
+  const ql = $("#sq").value.trim().toLowerCase();
+  const res = meetings.filter(m => !ql || (fmtD(m.date) + " " + m.minutes + " " + m.transcript).toLowerCase().includes(ql));
+  $("#sCount").textContent = ql ? `${res.length}/${meetings.length}` : String(meetings.length);
+  $("#slist").innerHTML = res.slice(0, 120).map(m => {
+    const d = new Date(m.createdAt), on = (current && current.id === m.id) || (active && active.id === m.id);
+    return `<button class="sitem${on ? " on" : ""}" data-id="${m.id}"><span class="code">${fmtD(m.date)} · ${pad(d.getHours())}:${pad(d.getMinutes())}</span><span class="desc">${esc(summary(m).snip)}</span></button>`;
+  }).join("") || `<p class="hint" style="padding:8px 10px">Henüz toplantı yok.</p>`;
+  $("#slist").querySelectorAll(".sitem").forEach(b => b.onclick = () => openMeeting(meetings.find(x => x.id === b.dataset.id)));
+  const last = meetings.reduce((t, m) => Math.max(t, m.updatedAt || 0), 0);
+  $("#sfoot").innerHTML = `Kayıtlar: bu cihaz<br>Son güncelleme ${last ? isoDay(new Date(last)) : "—"}`;
+}
+$("#sq").oninput = renderSide;
+$("#q").oninput = renderList;
+
+/* ---------- settings ---------- */
+async function renderSettings() {
+  $("#setDepts").value = settings.depts.join("\n");
+  $("#setPlant").value = settings.plant;
+  $("#setModel").value = settings.model;
+  $("#setLang").value = settings.lang;
+  $("#setNs").checked = settings.ns;
+  $("#setKeep").value = String(settings.keepDays);
+  let gpu = false; try { gpu = !!(navigator.gpu && await navigator.gpu.requestAdapter()); } catch {}
+  $("#deviceInfo").textContent = `Bu cihaz: ${gpu ? "ekran kartı hızlandırması var, otomatik ayar büyük modeli kullanır" : "ekran kartı hızlandırması yok, otomatik ayar dengeli modeli kullanır"}${crossOriginIsolated ? ` · ${navigator.hardwareConcurrency || "?"} çekirdek` : ""}.`;
+  try {
+    const e = await navigator.storage.estimate();
+    $("#storageInfo").textContent = `Kullanılan alan: ${(e.usage / 1e6).toFixed(0)} MB.`;
+  } catch {}
+}
+$("#setDepts").onchange = () => { const l = $("#setDepts").value.split("\n").map(s => s.trim()).filter(Boolean); settings.depts = l.length ? l : DEFAULTS.depts; saveSettings(); };
+$("#setPlant").onchange = () => { settings.plant = $("#setPlant").value.trim() || DEFAULTS.plant; saveSettings(); };
+$("#setModel").onchange = () => { settings.model = $("#setModel").value; saveSettings(); };
+$("#setLang").onchange = () => { settings.lang = $("#setLang").value; saveSettings(); };
+$("#setNs").onchange = () => { settings.ns = $("#setNs").checked; saveSettings(); };
+$("#setKeep").onchange = () => { settings.keepDays = +$("#setKeep").value; saveSettings(); cleanupAudio(); };
+
+$("#exportBtn").onclick = () => {
+  const data = { app: "verbale", version: 1, exportedAt: new Date().toISOString(), meetings: meetings.map(({ id, date, createdAt, updatedAt, durationSec, transcript, minutes }) => ({ id, date, createdAt, updatedAt, durationSec, transcript, minutes })) };
+  shareFile(new Blob([JSON.stringify(data, null, 1)], { type: "application/json" }), `verbale_backup_${isoDay(new Date())}.json`);
+};
+$("#importBackup").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    if (data.app !== "verbale" || !Array.isArray(data.meetings)) throw new Error();
+    let n = 0;
+    for (const x of data.meetings) {
+      const have = meetings.find(m => m.id === x.id);
+      if (have && have.updatedAt >= x.updatedAt) continue;
+      await save({ ...newMeetingObj(new Date(x.createdAt)), ...have, ...x, hasAudio: have?.hasAudio || false, audioName: have?.audioName || "", promptCopied: true });
+      n++;
+    }
+    await loadMeetings();
+    toast(`${n} toplantı yüklendi`);
+  } catch { toast("Bu dosya bir Verbale yedeği değil"); }
+};
+
+async function cleanupAudio() {
+  if (!settings.keepDays) return;
+  const limit = Date.now() - settings.keepDays * 864e5;
+  for (const m of meetings) {
+    if (m.hasAudio && m.minutes && m.createdAt < limit && m !== active) {
+      await DB.delAudio(m.id); m.hasAudio = false; await save(m);
+    }
+  }
+}
+
+/* ---------- start ---------- */
+await loadMeetings();
+// a recording that was cut off (app closed, phone restarted): rebuild it from the saved pieces
+const orphan = [...new Set((await DB.chunkMids()).map(k => k[0] ?? k))];
+for (const mid of orphan) {
+  let m = meetings.find(x => x.id === mid);
+  if (!m) { m = newMeetingObj(new Date(+mid.slice(1) || Date.now())); m.id = mid; }
+  await finalizeChunks(m);
+  setPref("active", mid);
+  toast("Yarım kalan kayıt kurtarıldı");
+}
+await cleanupAudio();
+const activeId = getPref("active");
+const a = activeId && meetings.find(m => m.id === activeId);
+await openActive(a || null);
+const cid = getPref("current");
+current = (cid && meetings.find(m => m.id === cid && m.minutes)) || meetings.find(m => m.minutes) || null;
+sizeCv(); drawWave();
+
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  navigator.serviceWorker.register("sw.js").then(() => {
+    // the first visit is not yet served by the service worker; reload once so
+    // speech recognition can use every CPU core
+    if (!crossOriginIsolated && !navigator.serviceWorker.controller) {
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        let done = false; try { done = sessionStorage.getItem("verbale.coi") === "1"; sessionStorage.setItem("verbale.coi", "1"); } catch {}
+        if (!done && !rec.running && !asrJob) location.reload();
+      });
+    }
+  }).catch(() => {});
+}
+</script>
+</body>
+</html>
