@@ -4,7 +4,7 @@
 // which lets speech recognition use several CPU cores.
 // Whisper model files are cached by transformers.js itself ("transformers-cache").
 const PREFIX = "verbale-";
-const VERSION = PREFIX + "v5";
+const VERSION = PREFIX + "v6";
 const SHELL = [
   "./",
   "./index.html",
@@ -12,8 +12,6 @@ const SHELL = [
   "./logo.png",
   "./img/header-art.jpg",
   "./img/seat-icon.jpg",
-  "./rec-worklet.js",
-  "./asr-worker.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png"

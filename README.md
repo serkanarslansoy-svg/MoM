@@ -47,7 +47,7 @@ of all minutes and transcripts.
 
 ## Files
 
-- `index.html` – the app
-- `rec-worklet.js` – records 16 kHz mono WAV
-- `asr-worker.js` – on-device speech recognition (transformers.js 3.7.1, Whisper)
+- `index.html` – the app, including the 16 kHz recorder and the on-device speech
+  recognition worker (transformers.js 3.7.1, Whisper). It also runs when opened as a
+  local file in Chrome, but installing on a phone needs the web address.
 - `sw.js`, `manifest.webmanifest`, `icons/` – install and offline support
