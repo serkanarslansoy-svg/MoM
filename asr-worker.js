@@ -73,7 +73,8 @@ function segments(audio) {
 function rms(a) { let s = 0; for (let i = 0; i < a.length; i += 8) s += a[i] * a[i]; return Math.sqrt(s / (a.length / 8)); }
 
 function clean(text) {
-  text = text.trim();
+  // drop sound tags such as [Musica] or (applausi)
+  text = text.replace(/[\[(]\s*(musica|music|applausi|applause|risate|laughter|silenzio|silence|rumore|noise)[^\])]*[\])]/gi, "").trim();
   if (!text || HALLUCINATIONS.test(text)) return "";
   // collapse a phrase repeated over and over (a classic Whisper loop)
   text = text.replace(/(\S.{4,120}?)(?:[\s,.]*\1){2,}/gi, "$1 […]");
