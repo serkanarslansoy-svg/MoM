@@ -881,7 +881,7 @@ async function runAsr() {
       toast("Yazıya dökme başarısız. İnternet bağlantısını kontrol edip tekrar deneyin.");
     }
   };
-  worker.onerror = e => { endAsr(); $("#asrStatus").textContent = "Hata: " + (e.message || "çalışan başlatılamadı"); };
+  worker.onerror = e => { endAsr(); $("#asrStatus").textContent = "Hata: " + (e.message || "yazıya dökme başlatılamadı. Uygulamayı web adresinden açtığınızdan ve internete bağlı olduğunuzdan emin olun."); };
   worker.postMessage({ type: "run", audio, preset: settings.model, language: settings.lang }, [audio.buffer]);
 }
 function endAsr() {
@@ -1174,6 +1174,13 @@ async function cleanupAudio() {
 }
 
 /* ---------- start ---------- */
+if (location.protocol === "file:") {
+  // opened as a downloaded file: recording and transcription need the web address
+  const w = document.createElement("div");
+  w.className = "warnbox";
+  w.innerHTML = "Uygulama dosya olarak açılmış. Kayıt ve yazıya dökme bu şekilde çalışmaz. Şu adresten açın: <b>serkanarslansoy-svg.github.io/MoM</b>";
+  $("#v-new").prepend(w);
+}
 await loadMeetings();
 // a recording that was cut off (app closed, phone restarted): rebuild it from the saved pieces
 const orphan = [...new Set((await DB.chunkMids()).map(k => k[0] ?? k))];

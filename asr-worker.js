@@ -21,12 +21,19 @@ async function hasWebGPU() {
   try { return !!(navigator.gpu && await navigator.gpu.requestAdapter()); } catch { return false; }
 }
 
+// Phones and tablets: the large model does not fit in memory even when the
+// browser offers WebGPU, so "auto" only picks it on a computer.
+const MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+  !!(navigator.userAgentData && navigator.userAgentData.mobile) ||
+  (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+
 async function resolvePreset(name) {
   const gpu = await hasWebGPU();
-  if (name === "auto") name = gpu ? "turbo" : "small";
+  if (name === "auto") name = gpu && !MOBILE ? "turbo" : "small";
   if (name === "turbo" && !gpu) name = "small";
   return name;
 }
+const FALLBACK = { turbo: "small", small: "base" };
 
 async function load(name) {
   if (asr && loadedKey === name) return;
@@ -89,14 +96,15 @@ self.onmessage = async ({ data }) => {
   try {
     let name = await resolvePreset(data.preset);
     postMessage({ type: "status", text: "Model yükleniyor", preset: name });
-    try {
-      await load(name);
-    } catch (err) {
-      if (name !== "turbo") throw err;
-      // the large model can fail on weaker graphics cards: fall back
-      name = "small";
-      postMessage({ type: "status", text: "Büyük model açılamadı, orta modele geçildi", preset: name });
-      await load(name);
+    for (;;) {
+      try { await load(name); break; }
+      catch (err) {
+        // not enough memory or graphics support: try the next smaller model
+        if (!FALLBACK[name]) throw err;
+        asr = null; loadedKey = null;
+        name = FALLBACK[name];
+        postMessage({ type: "status", text: `Model açılamadı, daha küçük modele geçildi (${name})`, preset: name });
+      }
     }
     const audio = data.audio;
     const segs = segments(audio);
